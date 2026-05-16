@@ -1,9 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow cross-origin requests for API — useful during development
   async headers() {
     return [
+      // Allow embedding in iframes from any origin (portfolio preview)
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "ALLOWALL" },
+          { key: "Content-Security-Policy", value: "frame-ancestors *" },
+        ],
+      },
+      // CORS for API routes
       {
         source: "/api/:path*",
         headers: [
