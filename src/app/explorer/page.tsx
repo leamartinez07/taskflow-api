@@ -96,9 +96,13 @@ export default function ExplorerPage() {
         className="sticky top-0 z-50 backdrop-blur-md px-6 py-3">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm shadow-lg"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 20px rgba(157,91,244,0.35)" }}>T</Link>
-            <span className="font-bold">TaskFlow <span style={{ color: "var(--brand)" }}>Explorer</span></span>
+            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-xl"
+              style={{ background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)", boxShadow: "0 0 20px rgba(168,85,247,0.35)", flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M2.5 7.5l3.5 3.5 6.5-6.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </Link>
+            <span className="font-semibold" style={{ letterSpacing: "-0.02em" }}>TaskFlow <span style={{ color: "var(--brand)", fontWeight: 700 }}>Explorer</span></span>
             <span className="rounded-full px-2 py-0.5 text-[10px]"
               style={{ border: "1px solid var(--border)", color: "var(--muted)" }}>Live DB</span>
           </div>

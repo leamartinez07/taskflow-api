@@ -1,19 +1,19 @@
 @echo off
 cd /d "C:\Users\Leandro\Documents\taskflow-api"
 
-echo Removing stale git lock...
+echo Removing stale git locks...
 del .git\HEAD.lock 2>nul
 del .git\index.lock 2>nul
 
-echo Staging changes...
-git add src/app/page.tsx src/app/globals.css src/app/layout.tsx
+echo Staging all changes...
+git add src/app/page.tsx src/app/studio/page.tsx src/app/explorer/page.tsx src/app/globals.css src/app/layout.tsx src/app/api/auth/register/route.ts
 
-echo Committing design improvements...
-git commit -m "design: improve logo SVG, gradient title, fix Inter font"
+echo Committing...
+git commit -m "design: SVG logo on all pages, gradient title, fix Inter font, improve error messages"
 
 echo Pushing to GitHub...
 git push origin main
 
 echo.
-echo Done! Vercel will redeploy automatically.
+echo Done! Vercel will redeploy in ~1 min.
 pause

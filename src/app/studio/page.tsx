@@ -175,10 +175,14 @@ function AuthPage({ onLogin }: { onLogin: (t: string, u: AuthUser) => void }) {
       <div className="relative w-full max-w-sm">
         {/* logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl font-black text-lg shadow-2xl"
-            style={{ background: "var(--accent)", color: "#fff", boxShadow: "0 0 40px rgba(157,91,244,0.35)" }}>T</div>
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: "var(--text)" }}>
-            TaskFlow <span style={{ color: "var(--brand)" }}>Studio</span>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl shadow-2xl"
+            style={{ background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)", boxShadow: "0 0 40px rgba(168,85,247,0.4)" }}>
+            <svg width="20" height="20" viewBox="0 0 15 15" fill="none">
+              <path d="M2.5 7.5l3.5 3.5 6.5-6.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-extrabold" style={{ letterSpacing: "-0.02em", color: "var(--text)" }}>
+            TaskFlow <span style={{ backgroundImage: "linear-gradient(90deg, #c084fc 0%, #9d5bf4 100%)", backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Studio</span>
           </h1>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>Interactive API playground</p>
         </div>
@@ -492,10 +496,14 @@ function Dashboard({ token, user, onLogout }: { token: string; user: AuthUser; o
       <nav className="sticky top-0 z-40 flex items-center justify-between gap-4 px-6 py-3"
         style={{ borderBottom: "1px solid var(--border)", background: "rgba(10,8,18,0.9)", backdropFilter: "blur(12px)" }}>
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm shadow-lg"
-            style={{ background: "var(--accent)", color: "#fff", boxShadow: "0 0 20px rgba(157,91,244,0.3)" }}>T</div>
-          <span className="font-bold" style={{ color: "var(--text)" }}>
-            TaskFlow <span style={{ color: "var(--brand)" }}>Studio</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl"
+            style={{ background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)", boxShadow: "0 0 20px rgba(168,85,247,0.35)", flexShrink: 0 }}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <path d="M2.5 7.5l3.5 3.5 6.5-6.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span className="font-semibold" style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>
+            TaskFlow <span style={{ color: "var(--brand)", fontWeight: 700 }}>Studio</span>
           </span>
         </div>
 
@@ -657,13 +665,20 @@ export default function StudioPage() {
         justifyContent: "center", gap: "20px", padding: "40px",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}>
-        <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", marginBottom: "8px" }}>
-            TaskFlow API Studio
-          </p>
-          <p style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, maxWidth: "280px" }}>
-            El studio interactivo requiere autenticación. Abrí el sitio completo para probarlo.
-          </p>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", height: "44px", width: "44px", alignItems: "center", justifyContent: "center", borderRadius: "14px", background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)", boxShadow: "0 0 30px rgba(168,85,247,0.35)" }}>
+            <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
+              <path d="M2.5 7.5l3.5 3.5 6.5-6.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <p style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", marginBottom: "6px", letterSpacing: "-0.02em" }}>
+              TaskFlow <span style={{ color: "var(--brand)" }}>Studio</span>
+            </p>
+            <p style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, maxWidth: "280px" }}>
+              El studio interactivo requiere autenticación. Abrí el sitio completo para probarlo.
+            </p>
+          </div>
         </div>
         <button
           onClick={() => window.open("https://taskflow-api-pied.vercel.app/studio", "_blank", "noopener,noreferrer")}
