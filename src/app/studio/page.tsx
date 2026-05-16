@@ -640,9 +640,45 @@ function Dashboard({ token, user, onLogout }: { token: string; user: AuthUser; o
 export default function StudioPage() {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [inIframe, setInIframe] = useState(false);
+
+  useEffect(() => {
+    try { setInIframe(window.self !== window.top); } catch { setInIframe(true); }
+  }, []);
 
   const login  = (t: string, u: AuthUser) => { setToken(t); setUser(u); };
   const logout = () => { setToken(null); setUser(null); };
+
+  if (inIframe) {
+    return (
+      <div style={{
+        minHeight: "100vh", background: "var(--bg)",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", gap: "20px", padding: "40px",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", marginBottom: "8px" }}>
+            TaskFlow API Studio
+          </p>
+          <p style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.6, maxWidth: "280px" }}>
+            El studio interactivo requiere autenticación. Abrí el sitio completo para probarlo.
+          </p>
+        </div>
+        <button
+          onClick={() => window.open("https://taskflow-api-pied.vercel.app/studio", "_blank", "noopener,noreferrer")}
+          style={{
+            background: "var(--accent)", color: "#fff",
+            border: "none", borderRadius: "10px",
+            padding: "10px 22px", fontSize: "13px", fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Abrir Studio ↗
+        </button>
+      </div>
+    );
+  }
 
   if (!token || !user) return <AuthPage onLogin={login} />;
 
