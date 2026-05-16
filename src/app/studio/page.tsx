@@ -6,7 +6,7 @@ import {
   IconLogout, IconTrash, IconChevron, IconSend, IconArrow, IconEye, IconKey
 } from "@/components/icons";
 
-const API = "https://taskflow-api-pied.vercel.app/api";
+const API = "/api";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 type AuthUser = { id: string; name: string; email: string };

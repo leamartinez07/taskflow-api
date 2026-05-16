@@ -1,306 +1,323 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  IconFolder, IconCheck, IconMsg, IconKey, IconHealth,
+  IconChevron, IconCopy, IconLock, IconGithub, IconDatabase, IconArrow
+} from "@/components/icons";
 
 const BASE_URL = "https://taskflow-api-pied.vercel.app";
-const GITHUB_URL = "https://github.com/leamartinez07/taskflow-api";
 
 type Route = {
-  method: "GET" | "POST" | "PATCH" | "DELETE";
-  path: string;
-  desc: string;
-  auth: boolean;
-  body?: string;
-  res?: string;
-  query?: string;
-  note?: string;
+  method: string; path: string; desc: string; auth: boolean;
+  body?: string; res?: string; query?: string; note?: string;
 };
 
-type Group = { label: string; tag: string; routes: Route[] };
-
-const GROUPS: Group[] = [
+const GROUPS: { label: string; Icon: React.FC<React.SVGProps<SVGSVGElement>>; desc: string; color: string; routes: Route[] }[] = [
   {
-    label: "Auth", tag: "auth",
+    label: "Auth", Icon: IconKey, color: "rgba(52,211,153,0.6)",
+    desc: "Registro e inicio de sesión. Devuelve un JWT para usar en los endpoints protegidos.",
     routes: [
-      {
-        method: "POST", path: "/api/auth/register",
-        desc: "Crear cuenta nueva. Devuelve el usuario y un JWT listo para usar.",
-        auth: false,
-        body: `{\n  "name":     "string (mín. 2 caracteres)",\n  "email":    "string válido",\n  "password": "mín. 8 chars, 1 mayúscula, 1 número"\n}`,
-        res: `{\n  "success": true,\n  "data": {\n    "user":  { "id": "uuid", "name": "...", "email": "..." },\n    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."\n  }\n}`,
-        note: "El password requiere al menos una mayúscula y un número.",
-      },
-      {
-        method: "POST", path: "/api/auth/login",
-        desc: "Autenticar usuario. Devuelve JWT.",
-        auth: false,
-        body: `{\n  "email":    "string",\n  "password": "string"\n}`,
-        res: `{\n  "success": true,\n  "data": {\n    "user":  { "id": "uuid", "name": "..." },\n    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."\n  }\n}`,
-      },
-      {
-        method: "GET", path: "/api/auth/me",
-        desc: "Perfil del usuario autenticado.",
-        auth: true,
-        res: `{\n  "success": true,\n  "data": { "id": "uuid", "name": "...", "email": "...", "avatar_url": null }\n}`,
-      },
-      {
-        method: "PATCH", path: "/api/auth/me",
-        desc: "Actualizar nombre o avatar del usuario actual.",
-        auth: true,
-        body: `{\n  "name"?:       "string",\n  "avatar_url"?: "string (URL)"\n}`,
-      },
+      { method: "POST", path: "/api/auth/register", desc: "Crear cuenta de usuario", auth: false, note: "Password: mín. 8 chars, 1 mayúscula, 1 número",
+        body: `{ "name": "string", "email": "string", "password": "string" }`,
+        res:  `{ "success": true, "data": { "user": { "id": "uuid", "name": "..." }, "token": "eyJ..." } }` },
+      { method: "POST", path: "/api/auth/login",    desc: "Autenticar y obtener JWT", auth: false,
+        body: `{ "email": "string", "password": "string" }`,
+        res:  `{ "success": true, "data": { "user": { "id": "uuid", "name": "..." }, "token": "eyJ..." } }` },
+      { method: "GET",  path: "/api/auth/me",       desc: "Perfil del usuario autenticado", auth: true,
+        res:  `{ "success": true, "data": { "id": "uuid", "name": "...", "email": "..." } }` },
+      { method: "PATCH",path: "/api/auth/me",       desc: "Actualizar nombre o avatar", auth: true,
+        body: `{ "name"?: "string", "avatar_url"?: "string" }` },
     ],
   },
   {
-    label: "Projects", tag: "projects",
+    label: "Projects", Icon: IconFolder, color: "rgba(192,132,252,0.6)",
+    desc: "Cada usuario gestiona solo sus propios proyectos. No son accesibles por otros usuarios.",
     routes: [
-      {
-        method: "GET", path: "/api/projects",
-        desc: "Listar proyectos del usuario autenticado.",
-        auth: true, query: "?status=active&page=1&limit=20",
-        res: `{\n  "success": true,\n  "data": [{ "id": "uuid", "name": "...", "status": "active" }],\n  "meta": { "page": 1, "limit": 20, "total": 3 }\n}`,
-      },
-      {
-        method: "POST", path: "/api/projects",
-        desc: "Crear proyecto nuevo.",
-        auth: true,
-        body: `{\n  "name":         "string (requerido)",\n  "description"?: "string",\n  "status"?:      "active | archived | completed"\n}`,
-      },
-      { method: "GET",    path: "/api/projects/:id",       desc: "Obtener proyecto junto con sus tareas.", auth: true },
-      { method: "PATCH",  path: "/api/projects/:id",       desc: "Editar proyecto. Solo disponible para el owner.", auth: true },
-      { method: "DELETE", path: "/api/projects/:id",       desc: "Eliminar proyecto. Solo disponible para el owner.", auth: true },
-      { method: "GET",    path: "/api/projects/:id/tasks", desc: "Listar tareas de un proyecto específico.", auth: true },
+      { method: "GET",    path: "/api/projects",           desc: "Listar proyectos (paginado)", auth: true, query: "?status=active&page=1&limit=20" },
+      { method: "POST",   path: "/api/projects",           desc: "Crear proyecto nuevo", auth: true,
+        body: `{ "name": "string", "description"?: "string", "status"?: "active|archived|completed" }` },
+      { method: "GET",    path: "/api/projects/:id",       desc: "Proyecto con sus tareas", auth: true },
+      { method: "PATCH",  path: "/api/projects/:id",       desc: "Editar proyecto (solo owner)", auth: true },
+      { method: "DELETE", path: "/api/projects/:id",       desc: "Eliminar proyecto (solo owner)", auth: true },
+      { method: "GET",    path: "/api/projects/:id/tasks", desc: "Tareas de un proyecto", auth: true },
     ],
   },
   {
-    label: "Tasks", tag: "tasks",
+    label: "Tasks", Icon: IconCheck, color: "rgba(251,191,36,0.6)",
+    desc: "Las tareas pertenecen a un proyecto. Solo el creador puede eliminarlas.",
     routes: [
-      {
-        method: "GET", path: "/api/tasks",
-        desc: "Listar tareas con filtros opcionales.",
-        auth: true, query: "?project_id=uuid&status=todo&priority=high&search=texto",
-      },
-      {
-        method: "POST", path: "/api/tasks",
-        desc: "Crear tarea nueva dentro de un proyecto.",
-        auth: true,
-        body: `{\n  "title":      "string (requerido)",\n  "project_id": "uuid (requerido)",\n  "status"?:    "todo | in_progress | done | cancelled",\n  "priority"?:  "low | medium | high | urgent",\n  "due_date"?:  "YYYY-MM-DD"\n}`,
-      },
-      { method: "GET",    path: "/api/tasks/:id", desc: "Obtener tarea con sus comentarios incluidos.", auth: true },
-      { method: "PATCH",  path: "/api/tasks/:id", desc: "Editar tarea. Disponible para el creador o el asignado.", auth: true },
-      { method: "DELETE", path: "/api/tasks/:id", desc: "Eliminar tarea. Solo el creador puede hacerlo.", auth: true },
+      { method: "GET",    path: "/api/tasks",     desc: "Listar tareas con filtros", auth: true, query: "?project_id=uuid&status=todo&priority=high" },
+      { method: "POST",   path: "/api/tasks",     desc: "Crear tarea nueva", auth: true,
+        body: `{ "title": "string", "project_id": "uuid", "status"?: "todo|in_progress|done|cancelled", "priority"?: "low|medium|high|urgent", "due_date"?: "YYYY-MM-DD" }` },
+      { method: "GET",    path: "/api/tasks/:id", desc: "Tarea con comentarios incluidos", auth: true },
+      { method: "PATCH",  path: "/api/tasks/:id", desc: "Editar tarea (creador o asignado)", auth: true },
+      { method: "DELETE", path: "/api/tasks/:id", desc: "Eliminar tarea (solo el creador)", auth: true },
     ],
   },
   {
-    label: "Comments", tag: "comments",
+    label: "Comments", Icon: IconMsg, color: "rgba(56,189,248,0.6)",
+    desc: "Hilo de discusión por tarea para anotar avances, bloqueos o decisiones.",
     routes: [
-      {
-        method: "GET", path: "/api/tasks/:id/comments",
-        desc: "Listar comentarios de una tarea.", auth: true,
-        res: `{\n  "success": true,\n  "data": [{ "id": "uuid", "content": "...", "user": { "name": "..." }, "created_at": "..." }]\n}`,
-      },
-      {
-        method: "POST", path: "/api/tasks/:id/comments",
-        desc: "Agregar comentario a una tarea.", auth: true,
-        body: `{ "content": "string (requerido)" }`,
-      },
+      { method: "GET",  path: "/api/tasks/:id/comments", desc: "Listar comentarios de una tarea", auth: true },
+      { method: "POST", path: "/api/tasks/:id/comments", desc: "Agregar comentario a una tarea", auth: true,
+        body: `{ "content": "string" }` },
     ],
   },
   {
-    label: "Health", tag: "health",
+    label: "Health", Icon: IconHealth, color: "rgba(122,109,148,0.6)",
+    desc: "Estado de la API y timestamp del servidor.",
     routes: [
-      {
-        method: "GET", path: "/api/health",
-        desc: "Estado del servidor.", auth: false,
-        res: `{ "status": "ok", "timestamp": "2026-05-15T00:00:00.000Z" }`,
-      },
+      { method: "GET", path: "/api/health", desc: "Estado y uptime de la API", auth: false,
+        res: `{ "status": "ok", "timestamp": "2026-05-15T00:00:00.000Z" }` },
     ],
   },
 ];
 
-const METHOD: Record<string, { fg: string; bg: string; label: string }> = {
-  GET:    { fg: "#5eead4", bg: "rgba(20,184,166,0.1)",  label: "GET"   },
-  POST:   { fg: "#86efac", bg: "rgba(34,197,94,0.1)",   label: "POST"  },
-  PATCH:  { fg: "#fcd34d", bg: "rgba(234,179,8,0.1)",   label: "PATCH" },
-  DELETE: { fg: "#f87171", bg: "rgba(239,68,68,0.08)",  label: "DEL"   },
+const METHOD: Record<string, { color: string; bg: string; border: string }> = {
+  GET:    { color: "#93c5fd", bg: "rgba(59,130,246,0.1)",  border: "rgba(59,130,246,0.2)"  },
+  POST:   { color: "#6ee7b7", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.2)"  },
+  PATCH:  { color: "#fcd34d", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.2)"  },
+  DELETE: { color: "#fca5a5", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.2)"   },
 };
+
+const totalRoutes = GROUPS.reduce((a, g) => a + g.routes.length, 0);
 
 export default function DocsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [inIframe, setInIframe] = useState(false);
   const [copied, setCopied]     = useState(false);
+  const [inIframe, setInIframe] = useState(false);
 
   useEffect(() => {
     try { setInIframe(window.self !== window.top); } catch { setInIframe(true); }
   }, []);
 
-  const toggle = (key: string) => setExpanded(p => p === key ? null : key);
+  const toggle = (k: string) => setExpanded(p => p === k ? null : k);
   const copy   = () => {
     navigator.clipboard.writeText(BASE_URL).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    setCopied(true); setTimeout(() => setCopied(false), 1600);
   };
   const openSite = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
-  const totalRoutes = GROUPS.reduce((a, g) => a + g.routes.length, 0);
-
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#e4e4e7", fontFamily: "'Inter', system-ui, sans-serif", fontSize: "14px" }}>
+    <main className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
 
       {/* iframe banner */}
       {inIframe && (
-        <div style={{ background: "#111", borderBottom: "1px solid #1c1c1c", padding: "7px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-          <span style={{ fontSize: "12px", color: "#52525b" }}>
-            Vista previa — abrí el sitio completo para interactuar con la API
-          </span>
-          <button onClick={() => openSite(BASE_URL)} style={{ fontSize: "11px", color: "#a1a1aa", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "5px", padding: "3px 10px", cursor: "pointer" }}>
-            Abrir ↗
+        <div className="flex items-center justify-between gap-3 px-5 py-2 text-xs"
+          style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", color: "var(--muted)" }}>
+          <span>Vista previa — algunas interacciones requieren abrir el sitio completo</span>
+          <button onClick={() => openSite(BASE_URL)}
+            className="rounded px-2.5 py-1 text-[11px] transition-opacity hover:opacity-80"
+            style={{ background: "var(--panel)", border: "1px solid var(--border)", color: "var(--text)", cursor: "pointer" }}>
+            Abrir sitio ↗
           </button>
         </div>
       )}
 
-      {/* header */}
-      <header style={{ borderBottom: "1px solid #1c1c1c", padding: "13px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: inIframe ? "37px" : 0, zIndex: 40, background: "rgba(10,10,10,0.95)", backdropFilter: "blur(10px)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "15px", color: "#f4f4f5" }}>
-            taskflow<span style={{ color: "#22c55e" }}>/api</span>
-          </span>
-          <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "3px", border: "1px solid #222", color: "#52525b", fontFamily: "monospace" }}>v1.0</span>
+      {/* nav */}
+      <nav className="sticky z-50 border-b px-6 py-3.5"
+        style={{ top: inIframe ? "36px" : 0, borderColor: "var(--border)", background: "rgba(10,8,18,0.92)", backdropFilter: "blur(16px)" }}>
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black text-white shadow-lg"
+              style={{ background: "var(--accent)", boxShadow: "0 0 18px rgba(157,91,244,0.35)" }}>T</div>
+            <span className="font-bold tracking-tight" style={{ color: "var(--text)" }}>
+              TaskFlow <span style={{ color: "var(--brand)" }}>API</span>
+            </span>
+            <span className="rounded px-2 py-0.5 font-mono text-[10px]"
+              style={{ border: "1px solid var(--border)", color: "var(--dim)" }}>v1.0.0</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-xs" style={{ color: "#34d399" }}>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#34d399", boxShadow: "0 0 6px #34d399" }} />
+              online
+            </span>
+            <button onClick={() => openSite(`${BASE_URL}/studio`)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+              style={{ background: "var(--accent)", color: "#fff", cursor: "pointer", border: "none" }}>
+              Abrir App <IconArrow className="h-3 w-3" />
+            </button>
+            <button onClick={() => openSite(`${BASE_URL}/explorer`)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-opacity hover:opacity-70"
+              style={{ border: "1px solid var(--border)", background: "var(--surface)", color: "var(--muted)", cursor: "pointer" }}>
+              <IconDatabase className="h-3.5 w-3.5" /> Explorer
+            </button>
+            <button onClick={() => openSite("https://github.com/leamartinez07/taskflow-api")}
+              className="rounded-lg p-2 transition-opacity hover:opacity-70"
+              style={{ border: "1px solid var(--border)", background: "var(--surface)", color: "var(--muted)", cursor: "pointer" }}>
+              <IconGithub className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <button onClick={() => openSite(`${BASE_URL}/studio`)} style={{ fontSize: "12px", color: "#fff", background: "#22c55e", border: "none", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", fontWeight: 600 }}>
-            Abrir App ↗
-          </button>
-          <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "#22c55e" }}>
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-            online
-          </span>
-          <button onClick={() => openSite(GITHUB_URL)} style={{ fontSize: "12px", color: "#71717a", background: "transparent", border: "1px solid #27272a", borderRadius: "6px", padding: "5px 12px", cursor: "pointer" }}>
-            GitHub ↗
-          </button>
-        </div>
-      </header>
+      </nav>
 
-      <div style={{ maxWidth: "820px", margin: "0 auto", padding: "40px 24px 72px" }}>
+      <div className="mx-auto max-w-5xl px-6 py-10 space-y-10">
 
         {/* intro */}
-        <div style={{ marginBottom: "44px" }}>
-          <h1 style={{ fontSize: "27px", fontWeight: 700, color: "#fafafa", marginBottom: "10px", letterSpacing: "-0.5px" }}>
-            Documentación de la API
-          </h1>
-          <p style={{ color: "#71717a", lineHeight: 1.75, maxWidth: "560px" }}>
-            REST API para gestión de proyectos y tareas. Autenticación JWT, control de acceso por rol y validación con Zod.
-          </p>
+        <div className="space-y-5">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
+              REST API · Documentación
+            </p>
+            <h1 className="text-3xl font-extrabold leading-tight tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
+              Task &amp; Project<br />
+              <span style={{ color: "var(--brand)" }}>Management API</span>
+            </h1>
+            <p className="mt-3 max-w-lg text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+              API REST lista para producción con Next.js 15, Supabase PostgreSQL, autenticación JWT stateless y validación Zod.
+            </p>
+          </div>
 
           {/* base url */}
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "#111", border: "1px solid #1c1c1c", borderRadius: "8px", padding: "9px 16px", fontFamily: "monospace", fontSize: "13px" }}>
-              <span style={{ color: "#3f3f46", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em" }}>BASE</span>
-              <span style={{ color: "#d4d4d8" }}>{BASE_URL}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-3 rounded-xl px-4 py-2.5 font-mono text-sm"
+              style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--dim)" }}>BASE URL</span>
+              <span style={{ color: "var(--text)" }}>{BASE_URL}</span>
             </div>
-            <button onClick={copy} style={{ fontSize: "12px", color: copied ? "#22c55e" : "#52525b", background: "#111", border: "1px solid #1c1c1c", borderRadius: "8px", padding: "9px 14px", cursor: "pointer" }}>
-              {copied ? "✓ copiado" : "copiar"}
+            <button onClick={copy}
+              className="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-xs transition-all hover:opacity-70 active:scale-95"
+              style={{ border: "1px solid var(--border)", background: "var(--surface)", color: copied ? "#34d399" : "var(--muted)", cursor: "pointer" }}>
+              <IconCopy className="h-3.5 w-3.5" /> {copied ? "¡Copiado!" : "Copiar"}
             </button>
           </div>
 
           {/* stats */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "16px" }}>
-            {[["endpoints", String(totalRoutes)], ["auth", "JWT"], ["db", "PostgreSQL"], ["validación", "Zod"], ["runtime", "Next.js 15"]].map(([k, v]) => (
-              <div key={k} style={{ background: "#111", border: "1px solid #1c1c1c", borderRadius: "6px", padding: "6px 12px", display: "flex", gap: "7px", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", color: "#3f3f46" }}>{k}</span>
-                <span style={{ fontSize: "11px", color: "#a1a1aa", fontFamily: "monospace" }}>{v}</span>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Endpoints", value: totalRoutes },
+              { label: "Auth",      value: "JWT" },
+              { label: "DB",        value: "PostgreSQL" },
+              { label: "Validación",value: "Zod" },
+              { label: "Framework", value: "Next.js 15" },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl px-4 py-2 text-center"
+                style={{ border: "1px solid var(--border)", background: "var(--panel)", minWidth: "72px" }}>
+                <div className="text-base font-bold" style={{ color: "var(--text)" }}>{s.value}</div>
+                <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--dim)" }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* auth note */}
-        <div style={{ background: "#0d1117", border: "1px solid #1c2a1c", borderLeft: "3px solid #22c55e", borderRadius: "8px", padding: "14px 18px", marginBottom: "44px" }}>
-          <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-            <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#22c55e", marginTop: "2px", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.08em" }}>Auth</span>
-            <p style={{ color: "#71717a", margin: 0, lineHeight: 1.7, fontSize: "13px" }}>
-              Los endpoints protegidos requieren{" "}
-              <code style={{ fontFamily: "monospace", fontSize: "12px", color: "#d4d4d8", background: "#161616", padding: "1px 6px", borderRadius: "4px" }}>
-                Authorization: Bearer &lt;token&gt;
-              </code>
-              {" "}en el header. El token lo obtenés en{" "}
-              <code style={{ fontFamily: "monospace", fontSize: "12px", color: "#86efac" }}>/api/auth/login</code>.
+        <div className="flex items-start gap-4 rounded-2xl p-5"
+          style={{ border: "1px solid rgba(157,91,244,0.2)", background: "rgba(157,91,244,0.05)" }}>
+          <div className="flex-shrink-0 rounded-xl p-2.5" style={{ background: "rgba(157,91,244,0.12)" }}>
+            <IconLock className="h-5 w-5" style={{ color: "var(--brand)" }} />
+          </div>
+          <div>
+            <p className="mb-1 font-semibold text-sm" style={{ color: "var(--text)" }}>Autenticación JWT</p>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+              Los endpoints marcados con <IconLock className="inline h-3 w-3 mx-1" style={{ color: "var(--muted)" }} /> requieren:
             </p>
+            <code className="mt-2 block rounded-lg px-3 py-2 font-mono text-xs"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--brand)" }}>
+              Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            </code>
           </div>
         </div>
 
-        {/* endpoint groups */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "44px" }}>
+        {/* groups */}
+        <div className="space-y-10">
           {GROUPS.map(group => (
             <section key={group.label}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#22c55e", letterSpacing: "0.06em" }}>/{group.tag}</span>
-                <span style={{ height: "1px", flex: 1, background: "#1c1c1c" }} />
-                <span style={{ fontSize: "11px", color: "#3f3f46" }}>{group.routes.length} ruta{group.routes.length > 1 ? "s" : ""}</span>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+                  style={{ border: `1px solid ${group.color.replace("0.6", "0.25")}`, background: group.color.replace("0.6", "0.07") }}>
+                  <group.Icon className="h-4 w-4" style={{ color: group.color.replace("0.6", "1") }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-bold" style={{ color: "var(--text)" }}>{group.label}</h2>
+                    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                      style={{ background: "var(--panel)", border: "1px solid var(--border)", color: "var(--muted)" }}>
+                      {group.routes.length} ruta{group.routes.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-snug mt-0.5" style={{ color: "var(--dim)" }}>{group.desc}</p>
+                </div>
               </div>
 
-              <div style={{ border: "1px solid #1c1c1c", borderRadius: "10px", overflow: "hidden", background: "#0d0d0d" }}>
-                {group.routes.map((route, idx) => {
-                  const key    = `${route.method}-${route.path}`;
-                  const isOpen = expanded === key;
-                  const hasDetail = !!(route.body || route.res || route.query || route.note);
-                  const ms     = METHOD[route.method];
+              <div className="overflow-hidden rounded-2xl" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                {group.routes.map((route, i) => {
+                  const key   = `${route.method}-${route.path}`;
+                  const isO   = expanded === key;
+                  const hasD  = !!(route.body || route.res || route.query);
+                  const ms    = METHOD[route.method];
 
                   return (
-                    <div key={key} style={{ borderBottom: idx < group.routes.length - 1 ? "1px solid #141414" : "none" }}>
+                    <div key={key} style={{ borderBottom: i < group.routes.length - 1 ? `1px solid var(--border)` : "none" }}>
                       {/* row */}
                       <div
-                        onClick={() => hasDetail && toggle(key)}
-                        style={{ display: "flex", alignItems: "center", gap: "12px", padding: "11px 16px", cursor: hasDetail ? "pointer" : "default", background: isOpen ? "#111" : "transparent", transition: "background 0.1s" }}
-                        onMouseEnter={e => { if (hasDetail && !isOpen) (e.currentTarget as HTMLElement).style.background = "#0f0f0f"; }}
-                        onMouseLeave={e => { if (!isOpen) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                        onClick={() => hasD && toggle(key)}
+                        className="flex items-center gap-3 px-4 py-3 transition-colors"
+                        style={{ cursor: hasD ? "pointer" : "default", background: isO ? "var(--panel)" : "transparent" }}
+                        onMouseEnter={e => { if (hasD && !isO) (e.currentTarget as HTMLElement).style.background = "var(--panel)"; }}
+                        onMouseLeave={e => { if (!isO) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                       >
-                        <span style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 700, color: ms.fg, background: ms.bg, padding: "2px 7px", borderRadius: "4px", flexShrink: 0, minWidth: "42px", textAlign: "center" }}>
-                          {ms.label}
+                        <span className="flex-shrink-0 rounded-md px-2.5 py-0.5 font-mono text-[11px] font-bold"
+                          style={{ color: ms.color, background: ms.bg, border: `1px solid ${ms.border}`, minWidth: "52px", textAlign: "center" }}>
+                          {route.method}
                         </span>
-                        <code style={{ fontFamily: "monospace", fontSize: "13px", color: "#e4e4e7", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <code className="flex-1 truncate font-mono text-sm" style={{ color: "var(--text)" }}>
                           {route.path}
-                          {route.query && <span style={{ color: "#3f3f46" }}>{route.query}</span>}
+                          {route.query && <span style={{ color: "var(--dim)" }}>{route.query}</span>}
                         </code>
+                        <span className="hidden truncate text-xs sm:block" style={{ color: "var(--muted)", maxWidth: "220px" }}>
+                          {route.desc}
+                        </span>
                         {route.auth && (
-                          <span style={{ fontSize: "10px", color: "#3f3f46", border: "1px solid #27272a", borderRadius: "4px", padding: "1px 6px", fontFamily: "monospace", flexShrink: 0 }}>auth</span>
-                        )}
-                        {hasDetail && (
-                          <span style={{ fontSize: "11px", color: "#3f3f46", flexShrink: 0, display: "inline-block", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>▾</span>
-                        )}
-                      </div>
-
-                      {/* description */}
-                      <div style={{ padding: "0 16px 10px calc(16px + 42px + 12px)" }}>
-                        <span style={{ fontSize: "12px", color: "#52525b" }}>{route.desc}</span>
-                        {route.note && (
-                          <span style={{ fontSize: "11px", color: "#a16207", background: "#1c1004", border: "1px solid #2c1a06", borderRadius: "4px", padding: "1px 7px", marginLeft: "8px", display: "inline-block" }}>
-                            ⚠ {route.note}
+                          <span className="flex-shrink-0 rounded-md p-1.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                            <IconLock className="h-3 w-3" style={{ color: "var(--dim)" }} />
                           </span>
+                        )}
+                        {hasD && (
+                          <IconChevron className={`h-4 w-4 flex-shrink-0 transition-transform ${isO ? "rotate-180" : ""}`}
+                            style={{ color: "var(--dim)" }} />
                         )}
                       </div>
 
                       {/* expanded */}
-                      {isOpen && hasDetail && (
-                        <div style={{ borderTop: "1px solid #141414", padding: "16px", paddingLeft: "calc(16px + 42px + 12px)", display: "flex", flexDirection: "column", gap: "14px" }}>
+                      {isO && (
+                        <div className="px-5 pb-5 pt-4 space-y-4" style={{ borderTop: "1px solid var(--border)" }}>
+                          {route.note && (
+                            <p className="rounded-lg px-3 py-2 text-xs" style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.2)", color: "#fcd34d" }}>
+                              ⚠ {route.note}
+                            </p>
+                          )}
                           {route.query && (
                             <div>
-                              <p style={{ fontSize: "10px", color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>Query params</p>
-                              <code style={{ fontFamily: "monospace", fontSize: "12px", color: "#71717a" }}>{route.query}</code>
+                              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Query params</p>
+                              <code className="font-mono text-xs" style={{ color: "var(--muted)" }}>{route.query}</code>
                             </div>
                           )}
-                          {route.body && (
-                            <div>
-                              <p style={{ fontSize: "10px", color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>Request body</p>
-                              <pre style={{ fontFamily: "monospace", fontSize: "12px", color: "#86efac", background: "#0a0a0a", border: "1px solid #1c1c1c", borderRadius: "6px", padding: "12px 14px", margin: 0, overflowX: "auto", lineHeight: 1.6 }}>{route.body}</pre>
+                          {(route.body || route.res) && (
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              {route.body && (
+                                <div>
+                                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Request body</p>
+                                  <pre className="rounded-xl px-4 py-3 font-mono text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto"
+                                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "#6ee7b7" }}>
+                                    {route.body}
+                                  </pre>
+                                </div>
+                              )}
+                              {route.res && (
+                                <div>
+                                  <p className="mb-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Respuesta</p>
+                                  <pre className="rounded-xl px-4 py-3 font-mono text-xs leading-relaxed whitespace-pre-wrap overflow-x-auto"
+                                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "#93c5fd" }}>
+                                    {route.res}
+                                  </pre>
+                                </div>
+                              )}
                             </div>
                           )}
-                          {route.res && (
-                            <div>
-                              <p style={{ fontSize: "10px", color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>Respuesta</p>
-                              <pre style={{ fontFamily: "monospace", fontSize: "12px", color: "#7dd3fc", background: "#0a0a0a", border: "1px solid #1c1c1c", borderRadius: "6px", padding: "12px 14px", margin: 0, overflowX: "auto", lineHeight: 1.6 }}>{route.res}</pre>
-                            </div>
-                          )}
-                          <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#27272a", margin: 0 }}>{BASE_URL}{route.path}</p>
+                          <p className="font-mono text-[11px]" style={{ color: "var(--dim)" }}>
+                            {BASE_URL}{route.path}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -311,14 +328,16 @@ export default function DocsPage() {
           ))}
         </div>
 
-        {/* footer */}
-        <footer style={{ marginTop: "60px", paddingTop: "20px", borderTop: "1px solid #141414", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-          <span style={{ fontSize: "11px", color: "#27272a", fontFamily: "monospace" }}>taskflow-api · Next.js 15 · Supabase · 2025</span>
-          <button onClick={() => openSite("https://leandromartinez.vercel.app")} style={{ fontSize: "11px", color: "#3f3f46", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", textDecorationColor: "#27272a" }}>
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t pb-6 pt-5 text-xs"
+          style={{ borderColor: "var(--border)", color: "var(--dim)" }}>
+          <span className="font-mono">taskflow-api · Next.js 15 · Supabase · 2025</span>
+          <button onClick={() => openSite("https://leandromartinez.vercel.app")}
+            className="transition-opacity hover:opacity-70"
+            style={{ color: "var(--muted)", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline" }}>
             leandro martinez
           </button>
         </footer>
       </div>
-    </div>
+    </main>
   );
 }
