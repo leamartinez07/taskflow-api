@@ -120,10 +120,14 @@ export default function DocsPage() {
         style={{ top: inIframe ? "36px" : 0, borderColor: "var(--border)", background: "rgba(10,8,18,0.92)", backdropFilter: "blur(16px)" }}>
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black text-white shadow-lg"
-              style={{ background: "var(--accent)", boxShadow: "0 0 18px rgba(157,91,244,0.35)" }}>T</div>
-            <span className="font-bold tracking-tight" style={{ color: "var(--text)" }}>
-              TaskFlow <span style={{ color: "var(--brand)" }}>API</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl"
+              style={{ background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)", boxShadow: "0 0 20px rgba(168,85,247,0.35)", flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M2.5 7.5l3.5 3.5 6.5-6.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="font-semibold tracking-tight" style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>
+              TaskFlow <span style={{ color: "var(--brand)", fontWeight: 700 }}>API</span>
             </span>
             <span className="rounded px-2 py-0.5 font-mono text-[10px]"
               style={{ border: "1px solid var(--border)", color: "var(--dim)" }}>v1.0.0</span>
@@ -160,9 +164,9 @@ export default function DocsPage() {
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--accent)" }}>
               REST API · Documentación
             </p>
-            <h1 className="text-3xl font-extrabold leading-tight tracking-tight md:text-4xl" style={{ color: "var(--text)" }}>
-              Task &amp; Project<br />
-              <span style={{ color: "var(--brand)" }}>Management API</span>
+            <h1 className="text-3xl font-extrabold leading-tight md:text-4xl" style={{ letterSpacing: "-0.03em" }}>
+              <span style={{ color: "var(--text)" }}>Task &amp; Project</span><br />
+              <span style={{ backgroundImage: "linear-gradient(90deg, #c084fc 0%, #9d5bf4 60%, #7c3aed 100%)", backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Management API</span>
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
               API REST lista para producción con Next.js 15, Supabase PostgreSQL, autenticación JWT stateless y validación Zod.
